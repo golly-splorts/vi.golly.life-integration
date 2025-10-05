@@ -50,9 +50,6 @@
     defaultRows: 150,
     defaultCellSize: 3,
 
-    // metrics warehouse for visualization and plots
-    metricsWarehouse: null,
-
     // URLs:
     baseApiUrl : getBaseApiUrl(),
     baseUIUrl : getBaseUIUrl(),
@@ -194,10 +191,6 @@
       try {
         this.loading();
         this.listLife.init();   // Reset/init algorithm
-
-        // Initialize the metrics warehouse
-        this.metricsWarehouse = Object.create(MetricsWarehouse);
-
         this.loadConfig();      // Load config from URL
         this.keepDOMElements(); // Keep DOM references (getElementsById)
         this.loadState();       // Load state from config
@@ -1164,15 +1157,6 @@
 
       // Check for victor
       GOL.checkForVictor(liveCounts);
-
-      // Update metrics in the metrics warehouse
-      GOL.metricsWarehouse.updateMetrics(
-        GOL.listLife.actualState1,
-        GOL.listLife.actualState2,
-        GOL.columns,
-        GOL.rows,
-        GOL.generation
-      );
 
       // Update winner/loser if found
       if (GOL.showWinnersLosers) {
