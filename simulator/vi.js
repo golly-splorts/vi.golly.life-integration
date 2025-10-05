@@ -50,6 +50,9 @@
     defaultRows: 150,
     defaultCellSize: 3,
 
+    // metrics warehouse for visualization and plots
+    metricsWarehouse: null,
+
     // URLs:
     baseApiUrl : getBaseApiUrl(),
     baseUIUrl : getBaseUIUrl(),
@@ -191,6 +194,10 @@
       try {
         this.loading();
         this.listLife.init();   // Reset/init algorithm
+
+        // Initialize the metrics warehouse
+        this.metricsWarehouse = Object.create(MetricsWarehouse);
+
         this.loadConfig();      // Load config from URL
         this.keepDOMElements(); // Keep DOM references (getElementsById)
         this.loadState();       // Load state from config
@@ -1158,6 +1165,15 @@
       // Check for victor
       GOL.checkForVictor(liveCounts);
 
+      // Update metrics in the metrics warehouse
+      GOL.metricsWarehouse.updateMetrics(
+        GOL.listLife.actualState1,
+        GOL.listLife.actualState2,
+        GOL.columns,
+        GOL.rows,
+        GOL.generation
+      );
+
       // Update winner/loser if found
       if (GOL.showWinnersLosers) {
         if (GOL.whoWon == 1) {
@@ -1440,6 +1456,12 @@
 
         this.canvas = document.getElementById('canvas');
         this.context = this.canvas.getContext('2d');
+
+        // Add these lines to disable anti-aliasing
+        this.context.imageSmoothingEnabled = false;
+        this.context.mozImageSmoothingEnabled = false;
+        this.context.webkitImageSmoothingEnabled = false;
+        this.context.msImageSmoothingEnabled = false;
 
         this.cellSize = GOL.cellSize;
         this.cellSpace = 1;
