@@ -30,7 +30,7 @@
       s : [2, 3],
       tolZero : 1e-8,
       tolStable : 1e-8,
-      runningAvgMaxDim: 280,
+      runningAvgMaxDim: 240,
     },
 
 
@@ -817,7 +817,9 @@
       var aa = parseFloat(a);
       var bb = parseFloat(b);
       var smol = 1e-12;
-      var denom = Math.max(Math.abs(aa + smol), Math.abs(bb + smol));
+      // var denom = Math.max(Math.abs(aa + smol), Math.abs(bb + smol));
+      // Match Python implementation exactly (despite being asymmetric)
+      var denom = Math.abs(aa + smol);
       return Math.abs(aa-bb)/denom;
     },
 
@@ -837,20 +839,25 @@
       if (this.foundVictor==false) {
         var maxDim = this.ruleParams.runningAvgMaxDim;
 
-        // Use vector magnitude to account for changes in all team scores
-        var squareSum = liveCounts.liveCells1**2 + liveCounts.liveCells2**2;
-        var rootSum = Math.sqrt(squareSum);
+        var victoryPct = 0.0;
+        var totalCells = liveCounts.liveCells1 + liveCounts.liveCells2;
+        var smol = 1e-12; // To prevent division by zero
+        if (totalCells > smol) {
+            if (liveCounts.liveCells1 > liveCounts.liveCells2) {
+                victoryPct = (liveCounts.liveCells1 / (totalCells + smol)) * 100;
+            } else {
+                victoryPct = (liveCounts.liveCells2 / (totalCells + smol)) * 100;
+            }
+        }
 
-        // update running average window
         if (this.generation < maxDim) {
-          // Keep populating the window...
-          //
-          // Use vector magnitude to account for changes in all team scores
-          this.runningAvgWindow[this.generation] = rootSum;
+          // Keep populating the window
+          this.runningAvgWindow[this.generation] = victoryPct;
+
         } else {
           // Push and pop newest/oldest values
           var removed = this.runningAvgWindow.shift();
-          this.runningAvgWindow.push(rootSum);
+          this.runningAvgWindow.push(victoryPct);
 
           // compute running average
           var sum = 0.0;
@@ -886,17 +893,21 @@
             var victoryByStability = ((bool0eq1 && bool1eq2) && (liveCounts.liveCells > 0));
             if (victoryByStability) {
               // Someone won due to the simulation becoming stable
-              this.foundVictor = true;
               if (liveCounts.liveCells1 > liveCounts.liveCells2) {
+                this.foundVictor = true;
                 this.whoWon = 1;
+                this.showWinnersLosers = true;
+                this.handlers.buttons.run();
+                this.running = false;
               } else if (liveCounts.liveCells2 > liveCounts.liveCells1) {
+                this.foundVictor = true;
                 this.whoWon = 2;
+                this.showWinnersLosers = true;
+                this.handlers.buttons.run();
+                this.running = false;
               } else {
                 this.whoWon = 0;
               }
-              this.showWinnersLosers = true;
-              this.handlers.buttons.run();
-              this.running = false;
             }
           }
         } // end if gen > maxDim
@@ -1441,12 +1452,6 @@
         this.canvas = document.getElementById('canvas');
         this.context = this.canvas.getContext('2d');
 
-        // Add these lines to disable anti-aliasing
-        this.context.imageSmoothingEnabled = false;
-        this.context.mozImageSmoothingEnabled = false;
-        this.context.webkitImageSmoothingEnabled = false;
-        this.context.msImageSmoothingEnabled = false;
-
         this.cellSize = GOL.cellSize;
         this.cellSpace = 1;
 
@@ -1769,6 +1774,7 @@
             result = this.getNeighborsFromAlive(x, y, i, this.actualState, deadNeighbors);
             neighbors = result['neighbors'];
 
+            // TODO: this might not match Python implementation
             // Majority wins, use color returned by getNeighborsFromAlive
             color = result['color'];
             if (color <= 0) {
@@ -2055,6 +2061,7 @@
         } else if (color2 > color1) {
           return 2;
         } else {
+          // TODO: this might not match Python implementation
           return 0;
         }
       },
