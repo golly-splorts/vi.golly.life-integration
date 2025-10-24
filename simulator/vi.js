@@ -885,50 +885,35 @@
           if (!this.approxEqual(removed, 0.0, tolZero)) {
             // Here because we have a nonzero running average (game is going), and no victor.
             // Check if average has become stable
-            //
-            //var diff01 = this.relativeDiff(this.runningAvgLast3[0], this.runningAvgLast3[1], tolStable);
-            //var diff02 = this.relativeDiff(this.runningAvgLast3[1], this.runningAvgLast3[2], tolStable);
             var bool0eq1 = this.approxEqual(this.runningAvgLast3[0], this.runningAvgLast3[1], tolStable);
             var bool1eq2 = this.approxEqual(this.runningAvgLast3[1], this.runningAvgLast3[2], tolStable);
-            var victoryByStability = ((bool0eq1 && bool1eq2) && (liveCounts.liveCells > 0));
-            if (victoryByStability) {
-              // Someone won due to the simulation becoming stable
-              if (liveCounts.liveCells1 > liveCounts.liveCells2) {
-                this.foundVictor = true;
-                this.whoWon = 1;
-                this.showWinnersLosers = true;
-                this.handlers.buttons.run();
-                this.running = false;
-              } else if (liveCounts.liveCells2 > liveCounts.liveCells1) {
-                this.foundVictor = true;
-                this.whoWon = 2;
-                this.showWinnersLosers = true;
-                this.handlers.buttons.run();
-                this.running = false;
-              } else {
-                this.whoWon = 0;
-              }
+            var zeroCells = (liveCounts.liveCells1 === 0 || liveCounts.liveCells2 === 0);
+
+            if ((bool0eq1 && bool1eq2) || zeroCells) {
+                var z1 = this.approxEqual(this.runningAvgLast3[0], 50.0, tolStable);
+                var z2 = this.approxEqual(this.runningAvgLast3[1], 50.0, tolStable);
+                var z3 = this.approxEqual(this.runningAvgLast3[2], 50.0, tolStable);
+
+                if ((!(z1 || z2 || z3)) || zeroCells) {
+                    if (liveCounts.liveCells1 > liveCounts.liveCells2) {
+                        this.foundVictor = true;
+                        this.whoWon = 1;
+                        this.showWinnersLosers = true;
+                        this.handlers.buttons.run();
+                        this.running = false;
+                    } else if (liveCounts.liveCells2 > liveCounts.liveCells1) {
+                        this.foundVictor = true;
+                        this.whoWon = 2;
+                        this.showWinnersLosers = true;
+                        this.handlers.buttons.run();
+                        this.running = false;
+                    } else {
+                        this.whoWon = 0;
+                    }
+                }
             }
           }
         } // end if gen > maxDim
-
-        // Second way for a victor to be declared,
-        // is to have all other teams get shut out.
-        var victoryByShutout = false;
-
-        if (liveCounts.liveCells1 == 0) {
-          this.whoWon = 2;
-          this.foundVictor = true;
-          this.showWinnersLosers = true;
-          this.handlers.buttons.run();
-          this.running = false;
-        } else if (liveCounts.liveCells2 == 0) {
-          this.whoWon = 1;
-          this.foundVictor = true;
-          this.showWinnersLosers = true;
-          this.handlers.buttons.run();
-          this.running = false;
-        }
       } // end if no victor found
     },
 
@@ -1774,12 +1759,15 @@
             result = this.getNeighborsFromAlive(x, y, i, this.actualState, deadNeighbors);
             neighbors = result['neighbors'];
 
-            // TODO: this might not match Python implementation
             // Majority wins, use color returned by getNeighborsFromAlive
             color = result['color'];
             if (color <= 0) {
-              // Tie, keep current color
-              color = this.getCellColor(x, y);
+              // Tie, use tie-breaker rule from python
+              if (x % 2 == y % 2) {
+                  color = 1;
+              } else {
+                  color = 2;
+              }
             }
 
             // Iterate over each dead cell (in the vicinity of alive cells),
