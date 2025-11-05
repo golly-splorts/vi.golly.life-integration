@@ -453,7 +453,6 @@
         })
         .catch(err => {
           this.error(-1);
-          //throw err
         });
         // Done loading pattern from /map API endpoint
 
@@ -650,6 +649,9 @@
             teamAbbrs[1] = teamApiResult[k].teamAbbr.toLowerCase();
           }
         }
+
+        // Star Cup has a simpler version, can we use this one?
+        // var teamAbbrs = [this.gameApiResult.team1Abbr.toLowerCase(), this.gameApiResult.team2Abbr.toLowerCase()];
 
         // Assemble team1/2 colors/names
         var teamColors = [this.gameApiResult.team1Color, this.gameApiResult.team2Color];
@@ -1034,7 +1036,7 @@
       this.element.team1wlrecCont = document.getElementById("team1record-container");
       this.element.team2wlrecCont = document.getElementById("team2record-container");
 
-      //this.element.livepct    = document.getElementById('livePct');
+      // this.element.livepct    = document.getElementById('livePct');
 
       this.element.team1color = document.getElementsByClassName("team1color");
       this.element.team1name  = document.getElementsByClassName("team1name");
@@ -1358,6 +1360,8 @@
 
         /**
          * Button Handler - Remove/Add Trail
+         *
+         * This function is only called when the user clicks the "Trails" button.
          */
         trail : function() {
           GOL.trail.current = !GOL.trail.current;
@@ -1369,7 +1373,9 @@
         },
 
         /**
-         * Button Handler - Cycle through the color schemes
+         * Cycle through the color schemes
+         *
+         * This function is only called when the user clicks the "Colors" button.
          */
         colorcycle : function() {
           if (GOL.colors.schemes.length > 1) {
@@ -1380,7 +1386,7 @@
             }
             GOL.updateTeamNamesColors();
             if (GOL.running) {
-              GOL.colors.schedule = true; // Delay redraw
+              GOL.colors.schedule = true; // Delay redraw until end of next generation
             } else {
               GOL.canvas.drawWorld(); // Force complete redraw now
             }
@@ -1390,7 +1396,9 @@
         },
 
         /**
-         * Button Handler - Show/hide the grid
+         * Show/hide the grid
+         *
+         * This function is only called when the user clicks the "Grid" button.
          */
         grid : function() {
           GOL.grid.current = (GOL.grid.current + 1) % GOL.grid.schemes.length;
@@ -1402,7 +1410,7 @@
         },
 
         /**
-         * Button Handler - Update simulation speed
+         * Update simulation speed
          */
         speedControl : function() {
           // We don't need to do anything with the
@@ -1577,6 +1585,8 @@
 
       /**
        * switchCell
+       *
+       * This is only activated when a user clicks on a cell
        */
       switchCell : function(i, j) {
         if (GOL.sandboxMode===true) {
@@ -1746,8 +1756,8 @@
           for (j = 1; j < this.actualState[i].length; j++) {
 
             x = this.actualState[i][j];
-            xm1 = this.periodicNormalizex(x-1);
             xp1 = this.periodicNormalizex(x+1);
+            xm1 = this.periodicNormalizex(x-1);
 
             deadNeighbors = [
               [xm1, ym1, 1], [x, ym1, 1], [xp1, ym1, 1], 
@@ -1801,11 +1811,6 @@
                 cellSurvives = true;
               }
             }
-
-            //if (y == GOL.rows-1) {
-            //  console.log('survive for cell x = ' + x + ' y = ' + y + ' : ' + cellSurvives);
-            //}
-
             if (cellSurvives) {
               // Keep cell alive
               this.addCell(x, y, newState);
@@ -2507,7 +2512,7 @@
         try {
           j = GOL.element.speedSlider.value;
         } catch {
-          console.log("Could not read speed-slider value, using default value of 60 ms");
+          // console.log("Could not read speed-slider value, using default value of 60 ms");
           return default_;
         }
         if (j<=0) {
