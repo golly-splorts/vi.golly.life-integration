@@ -8,6 +8,8 @@
     loadingElem : null,
     season : null,
     day: null,
+    urlSeason: null,
+    urlDay: null,
 
     containers : [
       'league-standings-header-container',
@@ -15,6 +17,7 @@
     ],
 
     init : function() {
+      this.getUrlParams();
       this.loading();
       this.loadConfig();
       this.registerDropdownListeners();
@@ -51,6 +54,12 @@
      */
     modeApiResult: null,
 
+    getUrlParams : function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      this.urlSeason = urlParams.get('season');
+      this.urlDay = urlParams.get('day');
+    },
+
     loadConfig : function() {
       let url = this.baseApiUrl + '/mode';
       fetch(url)
@@ -71,14 +80,17 @@
       seasonDropdownMenu.innerHTML = '';
       const seasonDropdownButton = document.getElementById('season-dropdown-button');
       const mode = this.modeApiResult.mode;
-      const currentSeason = this.modeApiResult.season;
+
+      const currentSeason0 = this.modeApiResult.season;
+      const currentSeason = currentSeason0 + 1;
       
+      // 1-indexed
       let seasons = [];
       let defaultSeason;
 
       if (mode < 10) { // Pre-season
         if (currentSeason > 1) {
-          for (let i = 1; i < currentSeason; i++) {
+          for (let i = 1; i < currentSeason - 1; i++) {
             seasons.push(i);
           }
           defaultSeason = currentSeason - 1;
@@ -103,8 +115,22 @@
         seasonDropdownMenu.appendChild(a);
       });
 
-      this.season = defaultSeason;
-      seasonDropdownButton.textContent = defaultSeason;
+      // Start with the default
+      let selectedSeason = defaultSeason;
+
+      // Handle a user-provided season via url params
+      if (this.urlSeason) {
+        const urlSeasonNum = parseInt(this.urlSeason, 10);
+        if (!isNaN(urlSeasonNum) && urlSeasonNum > 0 && urlSeasonNum <= defaultSeason) {
+            selectedSeason = urlSeasonNum;
+        }
+        // Otherwise, just use default
+      }
+
+      this.season = selectedSeason;
+      seasonDropdownButton.textContent = selectedSeason;
+
+      // Chain the day update drop-down (behavior depends on season drop-down)
       this.updateDayDropdown();
     },
 
@@ -121,13 +147,13 @@
       let days = [];
       let defaultDayValue;
 
-      if (mode >= 10 && mode < 20 && selectedSeason === currentSeason) { // In-season, current season selected
+      if (mode >= 10 && mode < 20 && selectedSeason === currentSeason + 1) { // In-season, current season selected
         const currentDay = Math.floor(elapsed / 3600) + 1;
         if (currentDay > 1) {
-          for (let i = 1; i < currentDay; i++) {
+          for (let i = 1; i <= currentDay; i++) {
             days.push(i);
           }
-          defaultDayValue = currentDay - 1;
+          defaultDayValue = currentDay;
         } else {
           // No full day has passed, so no days to list for this season.
           // The fallback below will handle this.
@@ -156,8 +182,17 @@
         dayDropdownMenu.appendChild(a);
       });
 
-      this.day = defaultDayValue;
-      dayDropdownButton.textContent = defaultDayValue;
+      let selectedDay = defaultDayValue;
+      if (this.urlDay) {
+        const urlDayNum = parseInt(this.urlDay, 10);
+        if (!isNaN(urlDayNum) && urlDayNum > 0 && urlDayNum <= defaultDayValue) {
+            selectedDay = urlDayNum;
+        }
+        this.urlDay = null;
+      }
+
+      this.day = selectedDay;
+      dayDropdownButton.textContent = selectedDay;
     },
 
     registerDropdownListeners: function() {
@@ -203,7 +238,9 @@
       this.clearStandings();
       this.loading();
 
-      let recordsUrl = this.baseApiUrl + '/standings/' + (season - 1) + '/' + (day - 1);
+      let season0 = season - 1;
+      let day0 = day - 1;
+      let recordsUrl = this.baseApiUrl + '/standings/' + season0 + '/' + day0;
       fetch(recordsUrl)
       .then(res => res.json())
       .then((standingsApiResult) => {
