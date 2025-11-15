@@ -428,6 +428,28 @@
             }
 
             teamStandingsItems = standingsApiResult.rankings[league][division];
+
+            if (seedPrefixes && seedPrefixes[league]) {
+                teamStandingsItems.sort((a, b) => {
+                    // Sort by wins descending
+                    if (b.teamWinLoss[0] !== a.teamWinLoss[0]) {
+                        return b.teamWinLoss[0] - a.teamWinLoss[0];
+                    }
+                    // wins/losses are zero sum, so skip losses
+
+                    // Now, for teams with the same W-L record, use clinch status.
+                    const prefixA = seedPrefixes[league][a.teamName];
+                    const prefixB = seedPrefixes[league][b.teamName];
+
+                    const order = { 'x-': 1, 'w-': 2, 'e-': 3 };
+
+                    const orderA = order[prefixA] || 4; // Unranked last
+                    const orderB = order[prefixB] || 4;
+
+                    return orderA - orderB;
+                });
+            }
+
             const divisionLeader = teamStandingsItems[0];
             const dps = 49;
             const day0 = this.day - 1;
