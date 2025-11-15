@@ -429,6 +429,7 @@
 
             teamStandingsItems = standingsApiResult.rankings[league][division];
 
+            let teamPrefixes = null;
             if (seedPrefixes && seedPrefixes[league]) {
                 teamStandingsItems.sort((a, b) => {
                     // Sort by wins descending
@@ -448,6 +449,74 @@
 
                     return orderA - orderB;
                 });
+            } else {
+                // If seeds are not final, calculate prefixes and then sort
+                teamPrefixes = {};
+                const dps = 49;
+                const day0 = this.day - 1;
+                const divisionLeaderForPrefix = teamStandingsItems[0];
+
+                teamStandingsItems.forEach((team, index) => {
+                    let prefix = '';
+                    const our_wins = team.teamWinLoss[0];
+                    const our_losses = team.teamWinLoss[1];
+
+                    if (index === 0) { // Is division leader
+                        let is_div_clinched = false;
+                        if (teamStandingsItems.length > 1) {
+                            const second_place_losses = teamStandingsItems[1].teamWinLoss[1];
+                            const magic = (dps + 1) - our_wins - second_place_losses;
+                            if (magic <= 0) {
+                                is_div_clinched = true;
+                            }
+                        }
+                        if (day0 === dps - 1) { // Last day of season
+                            is_div_clinched = true;
+                        }
+                        if (is_div_clinched) {
+                            prefix = 'x-';
+                        }
+                    } else { // Not division leader
+                        const elim_val = (dps + 1) - divisionLeaderForPrefix.teamWinLoss[0] - our_losses;
+                        let wc_elim_val = Infinity;
+                        if (wc_standings.length > 1) {
+                            wc_elim_val = (dps + 1) - wc_standings[1].teamWinLoss[0] - our_losses;
+                        }
+                        const is_eliminated = (elim_val <= 0 && (wc_elim_val <= 0 || wc_standings.length < 2));
+                        if (is_eliminated) {
+                            prefix = 'e-';
+                        }
+                    }
+
+                    if (!prefix) { // Playoff Clinch (w-)
+                        let is_playoff_clinched = false;
+                        if (overall_league_standings.length > 4) {
+                            const challenger = overall_league_standings[4];
+                            const playoff_clinch_magic = (dps + 1) - our_wins - challenger.teamWinLoss[1];
+                            if (playoff_clinch_magic <= 0) {
+                                is_playoff_clinched = true;
+                            }
+                        } else {
+                            is_playoff_clinched = true;
+                        }
+                        if (is_playoff_clinched) {
+                            prefix = 'w-';
+                        }
+                    }
+                    teamPrefixes[team.teamName] = prefix;
+                });
+
+                teamStandingsItems.sort((a, b) => {
+                    if (b.teamWinLoss[0] !== a.teamWinLoss[0]) {
+                        return b.teamWinLoss[0] - a.teamWinLoss[0];
+                    }
+                    const prefixA = teamPrefixes[a.teamName];
+                    const prefixB = teamPrefixes[b.teamName];
+                    const order = { 'x-': 1, 'w-': 2, 'e-': 3 };
+                    const orderA = order[prefixA] || 4;
+                    const orderB = order[prefixB] || 4;
+                    return orderA - orderB;
+                });
             }
 
             const divisionLeader = teamStandingsItems[0];
@@ -463,55 +532,8 @@
 
               if (seedPrefixes) {
                   prefix = seedPrefixes[league][teamStandings.teamName] || '';
-              } else {
-                // 1. Division Clinch (x-)
-                if (iS === 0) { // Is division leader
-                    let is_div_clinched = false;
-                    if (teamStandingsItems.length > 1) {
-                        const second_place_losses = teamStandingsItems[1].teamWinLoss[1];
-                        const magic = (dps + 1) - our_wins - second_place_losses;
-                        if (magic <= 0) {
-                            is_div_clinched = true;
-                        }
-                    }
-                    if (day0 === dps - 1) { // Last day of season
-                        is_div_clinched = true;
-                    }
-                    if (is_div_clinched) {
-                        prefix = 'x-';
-                    }
-                }
-                // 2. Elimination (e-)
-                else {
-                    const elim_val = (dps + 1) - divisionLeader.teamWinLoss[0] - our_losses;
-                    let wc_elim_val = Infinity;
-                    if (wc_standings.length > 1) { // Need at least 2 WC teams to compare
-                        wc_elim_val = (dps + 1) - wc_standings[1].teamWinLoss[0] - our_losses;
-                    }
-                    const is_eliminated = (elim_val <= 0 && (wc_elim_val <= 0 || wc_standings.length < 2));
-                    if (is_eliminated) {
-                        prefix = 'e-';
-                    }
-                }
-
-                // 3. Playoff Clinch (w-)
-                if (!prefix) {
-                    let is_playoff_clinched = false;
-                    // 4 playoff spots per league (2 div, 2 wc). Challenger is 5th team (index 4)
-                    if (overall_league_standings.length > 4) {
-                        const challenger = overall_league_standings[4];
-                        const playoff_clinch_magic = (dps + 1) - our_wins - challenger.teamWinLoss[1];
-                        if (playoff_clinch_magic <= 0) {
-                            is_playoff_clinched = true;
-                        }
-                    } else {
-                        is_playoff_clinched = true;
-                    }
-
-                    if (is_playoff_clinched) {
-                        prefix = 'w-';
-                    }
-                }
+              } else if (teamPrefixes) {
+                  prefix = teamPrefixes[teamStandings.teamName] || '';
               }
 
               var tr = document.createElement('tr');
