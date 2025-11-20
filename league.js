@@ -616,12 +616,14 @@
               tr.appendChild(tdPct);
 
               // Col 5: Games Left
-              const dps = 49;
-              var tdGl = document.createElement('td');
-              tdGl.classList.add('text-center', 'games-left-col');
-              const games_played = our_wins + our_losses;
-              tdGl.textContent = dps - games_played;
-              tr.appendChild(tdGl);
+              if (showGamesLeft) {
+                const dps = 49;
+                var tdGl = document.createElement('td');
+                tdGl.classList.add('text-center', 'games-left-col');
+                const games_played = our_wins + our_losses;
+                tdGl.textContent = dps - games_played;
+                tr.appendChild(tdGl);
+              }
 
               // Col 6: GB
               var tdGb = document.createElement('td');
