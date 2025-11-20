@@ -182,6 +182,10 @@
 </div>
 
 <style>
+  .hide-gl-column .gl-col {
+    display: none;
+  }
+
   .card .table th,
   .card .table td {
     /* Add vertical lines */
@@ -190,8 +194,6 @@
     font-size: 0.9375rem;
   }
   
-
-
   /* Prevent line wrapping in the team name column */
   .card .table .team-cell {
     white-space: nowrap;
@@ -277,8 +279,8 @@
                   <th scope="col" class="text-center">W</th>
                   <th scope="col" class="text-center">L</th>
                   <th scope="col" class="text-center">Pct</th>
-                  <th scope="col" class="text-center games-left-col">GL</th>
                   <th scope="col" class="text-center">GB</th>
+                  <th scope="col" class="text-center games-left-col">GL</th>
                   <th scope="col" class="text-center">E#</th>
                   <th scope="col" class="text-center">WCE#</th>
                 </tr>
@@ -303,8 +305,8 @@
                   <th scope="col" class="text-center">W</th>
                   <th scope="col" class="text-center">L</th>
                   <th scope="col" class="text-center">Pct</th>
-                  <th scope="col" class="text-center games-left-col">GL</th>
                   <th scope="col" class="text-center">GB</th>
+                  <th scope="col" class="text-center games-left-col">GL</th>
                   <th scope="col" class="text-center">E#</th>
                   <th scope="col" class="text-center">WCE#</th>
                 </tr>
@@ -386,6 +388,12 @@
         <hr />
         <h5>Legend</h5>
         <ul class="list-unstyled">
+            <li><strong>GB</strong> : Games Behind</li>
+            <li><strong>GL</strong> : Games Left</li>
+            <li><strong>E#</strong> : Elimination Number (0 indicates team has been mathematically eliminated from winning the division)</li>
+            <li><strong>WCE#</strong> : Wild Card Elimination Number (0 indicates team has been mathematically eliminated from the postseason)</li>
+        </ul>
+        <ul class="list-unstyled">
             <li><strong>x-</strong> : Clinched Division</li>
             <li><strong>w-</strong> : Clinched Wild Card</li>
             <li><strong>e-</strong> : Eliminated</li>
@@ -420,7 +428,7 @@
         <p>
         Ninjas have been dispatched to track down those responsible for the downtime
         and bring them back to Hellmouth Community College to fix the site.
-        </f>
+        </p>
       </div>
     </div>
 
