@@ -297,6 +297,18 @@
     },
 
     populateStandings: function(standingsApiResult, seedsApiResult) {
+        const mode = this.modeApiResult.mode;
+        const showGamesLeft = mode >= 10 && mode < 20;
+
+        const gl_headers = document.getElementsByClassName('games-left-col');
+        for (let i = 0; i < gl_headers.length; i++) {
+            if (showGamesLeft) {
+                gl_headers[i].style.display = '';
+            } else {
+                gl_headers[i].style.display = 'none';
+            }
+        }
+
         // Hide loading message and make league standings container visible
         this.loadingElem.classList.add('invisible');
         var leagueStandingsElem = document.getElementById('league-standings-container');
@@ -593,6 +605,14 @@
               tdL.classList.add('text-center'); // Align right
               tdL.textContent = our_losses;
               tr.appendChild(tdL);
+
+              // Col 3.5: Games Left
+              const dps = 49;
+              var tdGl = document.createElement('td');
+              tdGl.classList.add('text-center', 'games-left-col');
+              const games_played = our_wins + our_losses;
+              tdGl.textContent = dps - games_played;
+              tr.appendChild(tdGl);
 
               // Col 4: Pct
               var tdPct = document.createElement('td');
